@@ -1,0 +1,4 @@
+interface:
+  display_name: "Novel Finder"
+  short_description: "通过深度对话画像、关键词搜索和正版来源线索寻找中文网文"
+  default_prompt: "Use $novel-finder 帮我通过几轮对话找到适合我当前口味的中文网文。"
