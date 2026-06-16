@@ -9,11 +9,11 @@ Use this skill to help the user discover Chinese web novels by first clarifying 
 
 ## Core Workflow
 
-1. Start with preference discovery. Ask focused questions about liked and disliked works, already-read or already-rejected books, genre, protagonist, relationship dynamics, plot hooks, power system, tone, pacing, length, completion status, platform constraints, freshness constraints, favorite "爽点", and hard "毒点".
-2. Build a taste profile before searching. Summarize what the user wants, what they want to avoid, what they have already read, and which preferences are uncertain.
-3. Generate search keywords. Produce multiple query groups that combine genre, trope, protagonist type, tone, exclusion terms, comparison works, freshness windows, and platform filters.
+1. Start with preference discovery. Ask at most three high-impact questions per round about liked and disliked works, already-read or already-rejected books, genre, protagonist, relationship dynamics, plot hooks, power system, tone, pacing, length, completion status, platform constraints, freshness constraints, favorite "爽点", and hard "毒点". If the user already gave enough constraints, summarize first instead of asking a full questionnaire.
+2. Build a taste profile before searching. Summarize what the user wants, what they want to avoid, what they have already read, freshness requirements, and which preferences are uncertain.
+3. Generate search keywords. Produce 3-5 query groups by default that combine genre, trope, protagonist type, tone, exclusion terms, comparison works, freshness windows, and platform filters. Expand only when the user asks for deeper exploration.
 4. Search or guide search. When search tools are available and the user wants candidates, search with the generated keywords and verify book title, author, official or authorized reading source, completion or update status, review signals, and whether the candidate is too obvious for this user. If search is unavailable, output copyable queries and suggested official platforms instead of inventing results.
-5. Return candidates in a structured table. Include match reason, likely risks, source evidence, confidence, freshness fit, and a short trial-reading checkpoint.
+5. Return 3-6 candidates by default in a structured table. Include match reason, likely risks, source evidence, confidence, freshness fit, and a short trial-reading checkpoint. Do not main-recommend a candidate unless its official or authorized source and requested status are verified, or clearly mark it as unverified and keep it out of the top tier.
 6. Iterate after feedback. Treat every rejected or already-read candidate as evidence, update the taste profile, add it to the session exclusion list, adjust keywords, and search again.
 
 ## Source Rules
@@ -22,6 +22,7 @@ Use this skill to help the user discover Chinese web novels by first clarifying 
 - Use community sources only as discovery or review signals, not as reading-entry replacements.
 - Do not provide piracy, full-text scraping, download sites, paywall bypasses, or instructions for accessing unauthorized copies.
 - Do not fabricate titles, authors, platform availability, ratings, or review claims. Mark uncertain items as unverified.
+- Treat official or authorized source evidence and requested completion/update status as hard gates for top recommendations. Community-only leads can appear only as "待验证".
 
 ## Reference
 

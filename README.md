@@ -114,3 +114,38 @@ Expected output:
 ```text
 Skill is valid!
 ```
+
+## Test Plan
+
+Run these checks before publishing changes:
+
+1. Structural validation:
+
+   ```powershell
+   python -X utf8 C:\Users\81901\.codex\skills\.system\skill-creator\scripts\quick_validate.py novel-finder
+   ```
+
+2. Required-rule scan:
+
+   ```powershell
+   rg -n "Evidence Protocol|Confidence Rubric|Hard-fail rules|待验证线索|at most three|3-5 query groups" novel-finder
+   ```
+
+3. Scenario smoke tests:
+
+   - `Use $novel-finder 我想看都市异能，近年完本，主角成长，别降智，可以有后宫但别抢主线。`
+   - `Use $novel-finder 帮我找类似《诡秘之主》的小说，但不要克系太重，也不要已读经典。`
+   - `Use $novel-finder 我想看女频修仙，事业线强，少误会，只要完本。`
+
+## Acceptance Criteria
+
+A change is ready to publish when all of these are true:
+
+- `quick_validate.py` reports `Skill is valid!`.
+- The skill asks no more than three preference questions before producing a useful profile or keyword set.
+- Default output uses 3-5 keyword groups and 3-6 candidates, unless the user asks for deeper exploration.
+- Top recommendations have verified title, author, official or authorized source, and requested status.
+- Community-only or weakly sourced titles appear only as `待验证线索`, not as top recommendations.
+- Candidate tables include match reason, concrete risk, confidence, and a trial-reading checkpoint.
+- Rejected or already-read titles are added to a session exclusion list and are not repeated.
+- No piracy, full-text mirror, download, or paywall-bypass guidance appears in outputs.

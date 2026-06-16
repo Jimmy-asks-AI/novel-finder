@@ -17,6 +17,12 @@ Design every session around these observed reader problems:
 
 Ask in rounds. Do not ask every question at once. Start broad, summarize, then ask only the questions that materially narrow the next search.
 
+Keep each question round short:
+
+- Ask at most three questions before producing a useful intermediate result.
+- If the user gives a concrete request with genre, status, and dealbreakers, build a v0 taste profile and keyword set immediately.
+- Save secondary questions for the next narrowing round after candidates or keywords are shown.
+
 Round 0: avoid wasted recommendations
 
 - Ask for known already-read books when the user seems experienced, asks for "other books", or rejects a first list.
@@ -65,7 +71,7 @@ Keep the profile editable. After each user reaction, update it before generating
 
 ## Keyword Dimensions
 
-Build 5-10 query groups. Mix broad discovery queries with narrow exclusion queries.
+Build 3-5 query groups by default. Mix broad discovery queries with narrow exclusion queries. Use 5-10 groups only when the user asks for deep exploration or when the first search fails.
 
 Useful dimensions:
 
@@ -103,19 +109,56 @@ Prefer these as official or authorized sources:
 
 If search results are weak, search by trope first, then by platform, then by comparison title plus "类似", "书单", "推荐", or "避雷".
 
+## Evidence Protocol
+
+Classify evidence before recommending a title:
+
+| Evidence | Use | Notes |
+|---|---|---|
+| Official platform page | Can support top recommendation | Prefer pages from 起点, 晋江, 番茄, 纵横, 刺猬猫, 飞卢, 七猫, QQ阅读, 微信读书, 掌阅, publisher pages, or author pages. |
+| Authorized ebook/store page | Can support top recommendation | Useful for published or migrated works; still verify title and author. |
+| Platform search result or metadata mirror | Medium evidence | Use only when it clearly points to the official title, author, platform, and status. |
+| Community review, forum, book list, social post | Discovery/reputation only | Never treat it as the reading source. Use it to identify risks, praise, or reader consensus. |
+| Memory without source | Weak evidence | Use only to form search keywords. Do not present unverifiable facts as confirmed. |
+
+Required checks for a top-tier candidate:
+
+- Title and author are verified.
+- Official or authorized reading source is verified.
+- Requested status, such as 完本 or 连载可追, is verified or clearly marked unavailable.
+- At least two core taste-profile traits match.
+- At least one concrete possible mismatch is listed.
+
+If official source and requested status cannot both be verified, place the title in a "待验证线索" section instead of the main candidate table.
+
 ## Candidate Quality Gate
 
 Before presenting a candidate, check:
 
 - Exclusion: not already read, already rejected, or explicitly outside a hard constraint.
 - Freshness: fits the user's time window; if not, mark it as a deliberate exception.
-- Source: has an official or authorized reading source, or is clearly marked as unverified.
-- Status: completion/update status is checked when the user cares about it.
+- Source: has an official or authorized reading source; otherwise keep it out of top recommendations and mark it as "待验证".
+- Status: completion/update status is checked when the user cares about it. For "完本 only", unverified status is a hard fail for top recommendations.
 - Fit: matches at least two core profile traits, not just the broad genre.
 - Risk: includes one concrete possible mismatch, not a generic warning.
 - Variety: avoid a table made only of the most famous titles unless the user is new to the genre.
 
-If a candidate fails two or more checks, do not recommend it. Use it only as a search lead.
+Hard-fail rules:
+
+- Already read, already rejected, or violates a hard dealbreaker.
+- No official or authorized source evidence for a top recommendation.
+- Status is unverified when the user requires a status such as 完本.
+- Match is only broad genre with no specific profile fit.
+
+If a candidate fails any hard rule, do not put it in the top candidate table. Use it only as a search lead or "待验证线索".
+
+## Confidence Rubric
+
+Use one of these labels in `依据与置信度`:
+
+- `高`: official/authorized source verified, requested status verified, and at least two profile traits match.
+- `中`: source verified and fit is plausible, but one non-critical detail such as freshness, review consensus, or risk profile is uncertain.
+- `低`: title is a useful lead but depends on community sources, indirect metadata, or unresolved status. Keep these out of top recommendations unless the user asks for leads.
 
 ## Candidate Evaluation
 
@@ -134,7 +177,7 @@ Do not claim a book is good, complete, or officially available unless the source
 
 ## Output Format
 
-Use this structure after searching or after generating search-ready queries:
+Use this structure after searching or after generating search-ready queries. Default to 3-6 candidates and 3-5 keyword groups.
 
 ```markdown
 **口味画像**
@@ -147,6 +190,10 @@ Use this structure after searching or after generating search-ready queries:
 **候选小说**
 | 优先级 | 书名 | 作者 | 候选类型 | 正版/官方来源 | 匹配理由 | 可能雷点 | 依据与置信度 | 试读检查点 |
 |---|---|---|---|---|---|---|---|---|
+
+**待验证线索** <!-- only include when useful -->
+| 书名/线索 | 为什么可能相关 | 缺失证据 | 下一步验证 |
+|---|---|---|---|
 
 **下一轮收窄**
 1. ...
@@ -185,3 +232,41 @@ When the user rejects all candidates, respond with:
 - Avoid sending users to ambiguous "免费看全文" domains.
 - If a community page mentions a book, search for the official title and author before presenting it as a candidate.
 - Keep source wording precise: "官方页面显示", "社区书单提到", "评价线索较弱", or "待验证".
+
+## Worked Example
+
+Input:
+
+```text
+都市异能，近年完本，主角成长，别降智，可以有后宫但别抢主线。
+```
+
+Expected behavior:
+
+- Ask no more than three follow-up questions. If search is available, first summarize a v0 profile and search.
+- Exclude old obvious classics when the user says "近年" or "不要太早期".
+- Require official/authorized source and verified 完本 status for top candidates.
+- Prefer candidates where the ability system, antagonist motivation, and protagonist growth are visible in sources or review signals.
+- If a title is remembered but not source-verified, move it to `待验证线索`.
+
+Expected compact output shape:
+
+```markdown
+**口味画像**
+- 核心需求: 都市异能、近年完本、主角成长、剧情不降智。
+- 加分项: 可以有后宫/多女主，但主线优先。
+- 明确排除: 反派低智、人物动机牵强、纯打脸流水账。
+- 已读/已拒: 待补充。
+- 新鲜度要求: 近年，避免早期经典。
+
+**关键词组合**
+| 目的 | 关键词 |
+|---|---|
+| 官方平台 | site:qidian.com 都市 异术超能 完本 近年 |
+| 避雷 | 都市异能 完本 不降智 反派智商 书评 |
+| 小众补充 | 都市异能 冷门 近年完本 成长型 |
+
+**候选小说**
+| 优先级 | 书名 | 作者 | 候选类型 | 正版/官方来源 | 匹配理由 | 可能雷点 | 依据与置信度 | 试读检查点 |
+|---|---|---|---|---|---|---|---|---|
+```
